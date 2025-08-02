@@ -8,26 +8,132 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGoPlayground(t *testing.T) {
+func TestGoPlaygroundPresent(t *testing.T) {
 	validate := validator.New()
-	require.NoError(t, RegisterGPVNotNil(validate))
-	RegisterGPVUnwrapOptionTypeFunc(validate)
-
+	require.NoError(t, RegisterGPValidatorPresent(validate))
 	datas := []struct {
-		value    MoUser
+		value    ValidatePresentDto
 		contains string
 	}{
 		{
-			value:    MoUser{Name: mo.Some("")},
-			contains: "failed on the 'min' tag",
-		},
-		{
-			value:    MoUser{Name: mo.Some("1")},
+			value: ValidatePresentDto{
+				V: mo.Some(""),
+			},
 			contains: "",
 		},
 		{
-			value:    MoUser{Name: mo.None[string]()},
+			value: ValidatePresentDto{
+				V: mo.None[string](),
+			},
+			contains: "failed on the 'present' tag",
+		},
+	}
+
+	for _, data := range datas {
+		err := validate.Struct(&data.value)
+		if data.contains == "" {
+			require.NoError(t, err)
+		} else {
+			require.ErrorContains(t, err, data.contains)
+		}
+	}
+}
+
+func TestGoPlaygroundNotnil(t *testing.T) {
+	validate := validator.New()
+	require.NoError(t, RegisterGPValidatorNotNil(validate))
+	datas := []struct {
+		value    ValidateNotNilOptionDto
+		contains string
+	}{
+		{
+			value: ValidateNotNilOptionDto{
+				V: mo.Some(""),
+			},
+			contains: "",
+		},
+		{
+			value:    ValidateNotNilOptionDto{},
 			contains: "failed on the 'notnil' tag",
+		},
+		{
+			value: ValidateNotNilOptionDto{
+				V: mo.None[string](),
+			},
+			contains: "failed on the 'notnil' tag",
+		},
+		{
+			value: ValidateNotNilOptionDto{
+				V: mo.None[string](),
+			},
+			contains: "failed on the 'notnil' tag",
+		},
+	}
+
+	for _, data := range datas {
+		err := validate.Struct(&data.value)
+		if data.contains == "" {
+			require.NoError(t, err)
+		} else {
+			require.ErrorContains(t, err, data.contains)
+		}
+	}
+
+	str := ""
+	datas2 := []struct {
+		value    ValidateNotNilPointerDto
+		contains string
+	}{
+		{
+			value: ValidateNotNilPointerDto{
+				V: &str,
+			},
+			contains: "",
+		},
+		{
+			value:    ValidateNotNilPointerDto{},
+			contains: "failed on the 'notnil' tag",
+		},
+	}
+
+	for _, data := range datas2 {
+		err := validate.Struct(&data.value)
+		if data.contains == "" {
+			require.NoError(t, err)
+		} else {
+			require.ErrorContains(t, err, data.contains)
+		}
+	}
+}
+
+func TestGoPlaygroundOptionValidate(t *testing.T) {
+	validate := validator.New()
+	RegisterGPVUnwrapOptionTypeFunc(validate)
+	datas := []struct {
+		value    ValidateOptionDto
+		contains string
+	}{
+		{
+			value:    ValidateOptionDto{},
+			contains: "failed on the 'min' tag",
+		},
+		{
+			value: ValidateOptionDto{
+				V: mo.None[string](),
+			},
+			contains: "failed on the 'min' tag",
+		},
+		{
+			value: ValidateOptionDto{
+				V: mo.Some("1234"),
+			},
+			contains: "failed on the 'min' tag",
+		},
+		{
+			value: ValidateOptionDto{
+				V: mo.Some("12345"),
+			},
+			contains: "",
 		},
 	}
 

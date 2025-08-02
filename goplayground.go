@@ -20,15 +20,27 @@ func RegisterGPVUnwrapOptionTypeFunc(validate *validator.Validate) {
 	}, mo.Option[string]{})
 }
 
-// RegisterGPVNotNil notnil: mandatory, allows zero value
+// RegisterGPValidatorPresent require option.IsPresent=true
+func RegisterGPValidatorPresent(validate *validator.Validate) error {
+	return validate.RegisterValidation("present", gpValidatorPresent)
+}
+func gpValidatorPresent(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	if !IsOption(field.Type()) {
+		return true
+	}
+	return field.MethodByName("IsPresent").Call(nil)[0].Interface().(bool)
+}
+
+// RegisterGPValidatorNotNil notnil: mandatory, allows zero value (except nil)
 //
 //	required: mandatory, requires non-zero value
 //	omitnil: optional, requires non-zero value (except nil)
 //	omitempty: optional, allows zero value
-func RegisterGPVNotNil(validate *validator.Validate) error {
-	return validate.RegisterValidation("notnil", gpvNotNil)
+func RegisterGPValidatorNotNil(validate *validator.Validate) error {
+	return validate.RegisterValidation("notnil", gpValidatorNotNil)
 }
-func gpvNotNil(fl validator.FieldLevel) bool {
+func gpValidatorNotNil(fl validator.FieldLevel) bool {
 	field := fl.Field()
 
 	switch field.Kind() {
